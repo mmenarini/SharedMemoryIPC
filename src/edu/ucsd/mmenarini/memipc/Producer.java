@@ -14,6 +14,7 @@ public class Producer implements Closeable {
     private int blockPages;
     private int blocksNumber;
     private int blockSize;
+    private String ipc_tmp_filename;
     private MappedByteBuffer mbb;
     private ByteBuffer control_buf;
     private ByteBuffer current_buf;
@@ -34,6 +35,8 @@ public class Producer implements Closeable {
         control_buf.put(ProducerBlockAddr, val);
     }
 
+    public String getIPCFileName() {return ipc_tmp_filename;}
+    
     protected void nextBuf() {
         if (current_buf.hasRemaining()){
             int buf_end = current_buf.position();
@@ -50,8 +53,6 @@ public class Producer implements Closeable {
         current_buf.putInt(blockSize);
     }
 
-
-
     public Producer(int pageSize, int blockPages, byte blocksNumber) throws IOException {
         this.pageSize = pageSize;
         this.blockPages = blockPages;
@@ -61,6 +62,7 @@ public class Producer implements Closeable {
 
         File tmpFile = File.createTempFile("memipc-", ".dat");
         try (FileChannel fc = new RandomAccessFile(tmpFile, "rw").getChannel()) {
+            ipc_tmp_filename = tmpFile.getCanonicalPath();
             mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
             control_buf = mbb.slice();
             control_buf.limit(pageSize);
@@ -68,6 +70,10 @@ public class Producer implements Closeable {
             ConsumerBlockAddr=pageSize/2;
             setConsumerBlock((byte)0);
             setProducerBlock((byte)0);
+            mbb.position(pageSize);
+            current_buf=mbb.slice();
+            current_buf.limit(blockSize);
+            current_buf.putInt(blockSize);
         }
     }
 
