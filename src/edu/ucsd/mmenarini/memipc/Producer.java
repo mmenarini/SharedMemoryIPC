@@ -112,6 +112,7 @@ public class Producer implements WritableByteChannel {
         long fileSize = blocksNumber*blockSize+pageSize;
 
         File tmpFile = File.createTempFile("memipc-", ".dat");
+        tmpFile.deleteOnExit();
         try (FileChannel fc = new RandomAccessFile(tmpFile, "rw").getChannel()) {
             ipc_tmp_filename = tmpFile.getCanonicalPath();
             mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
@@ -139,6 +140,11 @@ public class Producer implements WritableByteChannel {
     public void close() throws IOException {
         nextBuf();
         setProducerDone((byte)1);
+        try{
+            mbb=null;
+            File f = new File(this.ipc_tmp_filename);
+            f.delete();
+        } catch (Exception e){ e.printStackTrace();}
     }
 
 

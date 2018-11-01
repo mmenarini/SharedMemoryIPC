@@ -1,5 +1,6 @@
 package edu.ucsd.mmenarini.memipc;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -122,6 +123,11 @@ public class Consumer implements ReadableByteChannel {
     @Override
     public void close()  {
         setConsumerBlock((byte)-1);
+        try{
+            mbb=null;
+            File f = new File(this.ipc_tmp_filename);
+            f.delete();
+        } catch (Exception e){e.printStackTrace();}
     }
 
     @Override
